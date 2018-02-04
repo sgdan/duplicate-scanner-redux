@@ -48,7 +48,10 @@ fun open(state: State): State {
     return state
 }
 
-fun State.delete(path: String) = copy(deleted = deleted.add(path))
+fun State.delete(path: String): State {
+    File(path).delete()
+    return copy(deleted = deleted.add(path))
+}
 
 /**
  * When the user selects a group of files that are the same size, we need to
@@ -60,7 +63,7 @@ fun State.selectSize(size: String): State {
     val selected = size.toLongOrNull() ?: return copy(selectedSize = null)
 
     // figure out which files need to be hashed
-    val paths = sizeToPaths.getOrElse(selected, hashSet())
+    val paths: Set<String> = sizeToPaths.getOrElse(selected, hashSet())
     val toHash: Set<String> = paths.removeAll(hashing).removeAll(hashed)
     launch {
         toHash.forEach { path ->
@@ -83,11 +86,11 @@ fun State.addFile(path: String, length: Long): State {
 fun State.addHash(path: String, hash: String): State {
     val paths = hashToPaths.getOrElse(hash, hashSet()).add(path)
     val size = pathToSize.apply(path)
-    val existing = sizeToHashes.getOrElse(size, hashSet())
+    val hashes = sizeToHashes.getOrElse(size, hashSet()).add(hash)
     return copy(hashToPaths = hashToPaths.put(hash, paths),
             hashing = hashing.remove(path),
-            hashed = hashed.add(hash),
-            sizeToHashes = sizeToHashes.put(size, existing.add(hash)))
+            hashed = hashed.add(path),
+            sizeToHashes = sizeToHashes.put(size, hashes))
 }
 
 /**

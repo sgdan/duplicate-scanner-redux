@@ -42,14 +42,13 @@ fun bySize(state: State) = doc.create.html {
                 val n = paths.size()
                 val remaining = paths.removeAll(state.deleted).size()
                 paths.forEachIndexed { i, path ->
-                    val style = if (remaining < 2) "lock" else position(i, n)
-                    fileRow(state, path, style)
+                    fileRow(state, path, position(i, n), remaining < 2)
                 }
             }
 
             // also display files still being hashed
             state.hashing.filter { state.pathToSize.apply(it) == state.selectedSize }.forEach { path ->
-                fileRow(state, path, "only")
+                fileRow(state, path, "only", true)
             }
         }
     }
@@ -62,18 +61,18 @@ fun position(i: Int, n: Int) = when {
     else -> "middle"
 }
 
-fun DIV.fileRow(state: State, path: String, style: String) {
+fun DIV.fileRow(state: State, path: String, style: String, lock: Boolean) {
     div("row $style") {
         icon("file")
         div("grow pad") {
             val f = File(path)
-            div { +f.name }
-            div("path") { +(f.parentFile?.absolutePath ?: "-") }
+            div("trunc") { +f.name }
+            div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
         }
         when {
             state.hashing.contains(path) -> icon("spinner")
             state.deleted.contains(path) -> icon("cross")
-            state.safeMode && list("lock", "only").contains(style) -> icon("lock")
+            state.safeMode && lock -> icon("lock")
             else -> iconButton("delete", DELETE.name, path)
         }
     }
@@ -111,8 +110,8 @@ fun folders(state: State) = doc.create.html {
                         icon("folder")
                         div("grow pad") {
                             val f = File(folder)
-                            div { +f.name }
-                            div("path") { +(f.parentFile?.absolutePath ?: "-") }
+                            div("trunc") { +f.name }
+                            div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
                         }
                     }
                 }
@@ -150,14 +149,14 @@ fun sizeToString(size: Long) = when {
 }
 
 fun DIV.icon(name: String) {
-    div("pad") {
+    div("pad fixed") {
         div("${name}Icon icon")
     }
 }
 
 fun DIV.iconButton(name: String, vararg action: String) {
-    div("pad") {
-        button(classes = "${name}Button icon pad") {
+    div("pad fixed") {
+        button(classes = "${name}Button icon") {
             val actions = action.joinToString("','", "'", "'") { escape(it) }
             onClick = "performAction($actions)"
         }

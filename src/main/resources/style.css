@@ -1,33 +1,28 @@
 * {
-    /*
+  /*
     border: 1px solid black;
     */
-    border: none;
-    font-size: inherit;
-    overflow: hidden;
+  border: none;
+  font-size: inherit;
+  overflow: hidden;
 }
 
 html {
-    font-family: "Lucida Sans", sans-serif;
-    font-size: 16px;
+  font-family: "Lucida Sans", sans-serif;
+  font-size: 16px;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    background-color: #eee;
-    color: #000;
-    display: flex;
-    flex-direction: column;
+  margin: 0;
+  padding: 0;
+  background-color: #eee;
+  color: #000;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {
-    font-size: 1.5rem;
-}
-
-button {
-    /* needs padding to match size of icon div */
-    padding: 1rem;
+  font-size: 1.5rem;
 }
 
 .rowHolder {
@@ -39,54 +34,63 @@ button {
 }
 
 .row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fixed {
+  flex-shrink: 0;
 }
 
 .grow {
-    flex-grow: 1;
+  flex-grow: 1;
 }
 
 .path {
-    font-size: 0.6rem;
+  font-size: 0.6rem;
+}
+
+.trunc {
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .center {
-    text-align: center;
+  text-align: center;
 }
 
 .pad {
-    padding: 0.2rem;
+  padding: 0.2rem;
 }
 
 .icon {
-    width: 2rem;
-    height: 2rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .first {
-  border-top:    1px solid red;
-  border-left:  1px solid red;
+  border-top: 1px solid red;
+  border-left: 1px solid red;
   border-right: 1px solid red;
 }
 
 .middle {
-  border-left:  1px solid red;
+  border-left: 1px solid red;
   border-right: 1px solid red;
 }
 
 .last {
-  border-bottom:    1px solid red;
-  border-left:  1px solid red;
+  border-bottom: 1px solid red;
+  border-left: 1px solid red;
   border-right: 1px solid red;
 }
 
 .only {
-  border-top:    1px solid red;
-  border-bottom:    1px solid red;
-  border-left:  1px solid red;
+  border-top: 1px solid red;
+  border-bottom: 1px solid red;
+  border-left: 1px solid red;
   border-right: 1px solid red;
 }
 
@@ -95,15 +99,15 @@ button {
 }
 
 .filesIcon {
-    background: url(icons/files-empty.svg);
+  background: url(icons/files-empty.svg);
 }
 
 .fileIcon {
-    background: url(icons/file.svg);
+  background: url(icons/file.svg);
 }
 
 .folderIcon {
-    background: url(icons/folder-open.svg);
+  background: url(icons/folder-open.svg);
 }
 
 .crossIcon {
@@ -111,67 +115,67 @@ button {
 }
 
 .spinnerIcon {
-    background: url(icons/spinner.svg);
+  background: url(icons/spinner.svg);
 }
 
 .openButton {
-    background: url(icons/folder-open.svg);
+  background: url(icons/folder-open.svg);
 }
 
 .openButton:hover {
-    background: url(icons/highlight/folder-open.svg);
+  background: url(icons/highlight/folder-open.svg);
 }
 
 .openButton:focus {
-    background: url(icons/selected/folder-open.svg);
+  background: url(icons/selected/folder-open.svg);
 }
 
 .deleteButton {
-    background: url(icons/delete.svg);
+  background: url(icons/delete.svg);
 }
 
 .deleteButton:hover {
-    background: url(icons/highlight/delete.svg);
+  background: url(icons/highlight/delete.svg);
 }
 
 .deleteButton:focus {
-    background: url(icons/selected/delete.svg);
+  background: url(icons/selected/delete.svg);
 }
 
 .rightButton {
-    background: url(icons/right.svg);
+  background: url(icons/right.svg);
 }
 
 .rightButton:hover {
-    background: url(icons/highlight/right.svg);
+  background: url(icons/highlight/right.svg);
 }
 
 .rightButton:focus {
-    background: url(icons/selected/right.svg);
+  background: url(icons/selected/right.svg);
 }
 
 .leftButton {
-    background: url(icons/left.svg);
+  background: url(icons/left.svg);
 }
 
 .leftButton:hover {
-    background: url(icons/highlight/left.svg);
+  background: url(icons/highlight/left.svg);
 }
 
 .leftButton:focus {
-    background: url(icons/selected/left.svg);
+  background: url(icons/selected/left.svg);
 }
 
 .checkedButton {
-    background: url(icons/checked.svg);
+  background: url(icons/checked.svg);
 }
 .checkedButton:hover {
-    background: url(icons/highlight/checked.svg);
+  background: url(icons/highlight/checked.svg);
 }
 
 .uncheckedButton {
-    background: url(icons/unchecked.svg);
+  background: url(icons/unchecked.svg);
 }
 .uncheckedButton:hover {
-    background: url(icons/highlight/unchecked.svg);
+  background: url(icons/highlight/unchecked.svg);
 }
