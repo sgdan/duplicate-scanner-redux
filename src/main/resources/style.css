@@ -1,0 +1,177 @@
+* {
+    /*
+    border: 1px solid black;
+    */
+    border: none;
+    font-size: inherit;
+    overflow: hidden;
+}
+
+html {
+    font-family: "Lucida Sans", sans-serif;
+    font-size: 16px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #eee;
+    color: #000;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+button {
+    /* needs padding to match size of icon div */
+    padding: 1rem;
+}
+
+.rowHolder {
+  display: flex;
+  flex-direction: column;
+  height: 10rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.path {
+    font-size: 0.6rem;
+}
+
+.center {
+    text-align: center;
+}
+
+.pad {
+    padding: 0.2rem;
+}
+
+.icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.first {
+  border-top:    1px solid red;
+  border-left:  1px solid red;
+  border-right: 1px solid red;
+}
+
+.middle {
+  border-left:  1px solid red;
+  border-right: 1px solid red;
+}
+
+.last {
+  border-bottom:    1px solid red;
+  border-left:  1px solid red;
+  border-right: 1px solid red;
+}
+
+.only {
+  border-top:    1px solid red;
+  border-bottom:    1px solid red;
+  border-left:  1px solid red;
+  border-right: 1px solid red;
+}
+
+.lockIcon {
+    background: url(icons/lock.svg);
+}
+
+.filesIcon {
+    background: url(icons/files-empty.svg);
+}
+
+.fileIcon {
+    background: url(icons/file.svg);
+}
+
+.folderIcon {
+    background: url(icons/folder-open.svg);
+}
+
+.crossIcon {
+    background: url(icons/cross.svg);
+}
+
+.spinnerIcon {
+    background: url(icons/spinner.svg);
+}
+
+.openButton {
+    background: url(icons/folder-open.svg);
+}
+
+.openButton:hover {
+    background: url(icons/highlight/folder-open.svg);
+}
+
+.openButton:focus {
+    background: url(icons/selected/folder-open.svg);
+}
+
+.deleteButton {
+    background: url(icons/delete.svg);
+}
+
+.deleteButton:hover {
+    background: url(icons/highlight/delete.svg);
+}
+
+.deleteButton:focus {
+    background: url(icons/selected/delete.svg);
+}
+
+.rightButton {
+    background: url(icons/right.svg);
+}
+
+.rightButton:hover {
+    background: url(icons/highlight/right.svg);
+}
+
+.rightButton:focus {
+    background: url(icons/selected/right.svg);
+}
+
+.leftButton {
+    background: url(icons/left.svg);
+}
+
+.leftButton:hover {
+    background: url(icons/highlight/left.svg);
+}
+
+.leftButton:focus {
+    background: url(icons/selected/left.svg);
+}
+
+.checkedButton {
+    background: url(icons/checked.svg);
+}
+.checkedButton:hover {
+    background: url(icons/highlight/checked.svg);
+}
+
+.uncheckedButton {
+    background: url(icons/unchecked.svg);
+}
+.uncheckedButton:hover {
+    background: url(icons/highlight/unchecked.svg);
+}
