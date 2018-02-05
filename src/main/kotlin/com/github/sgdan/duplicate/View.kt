@@ -69,6 +69,7 @@ fun DIV.fileRow(state: State, path: String, style: String, lock: Boolean) {
             div("trunc") { +f.name }
             div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
         }
+        icon("open")
         when {
             state.hashing.contains(path) -> icon("spinner")
             state.deleted.contains(path) -> icon("cross")
@@ -123,14 +124,17 @@ fun folders(state: State) = doc.create.html {
             // show groups of 2 or more files of the same size
             div("rowHolder") {
                 state.sizeToPaths.toStream().filter { it._2.size() > 1 }.take(100).forEach {
+                    val paths = it._2
                     val size = it._1
-                    val n = it._2.size()
+                    val n = paths.size()
+                    val remaining = paths.removeAll(state.deleted).size()
                     div("row") {
                         icon("files")
                         div("grow pad") {
                             div { +sizeToString(size) }
                             div("path") {
                                 +"$n files"
+                                if (remaining < n) +", $remaining remaining"
                             }
                         }
                         iconButton("right", SELECT_SIZE.name, size.toString())
@@ -156,7 +160,7 @@ fun DIV.icon(name: String) {
 
 fun DIV.iconButton(name: String, vararg action: String) {
     div("pad fixed") {
-        button(classes = "${name}Button icon") {
+        button(classes = "${name}Icon icon") {
             val actions = action.joinToString("','", "'", "'") { escape(it) }
             onClick = "performAction($actions)"
         }

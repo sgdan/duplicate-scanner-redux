@@ -57,6 +57,12 @@ h1 {
   white-space: nowrap;
 }
 
+.trunc:hover {
+  overflow: visible;
+  white-space: normal;
+  height: auto;
+}
+
 .center {
   text-align: center;
 }
@@ -95,7 +101,7 @@ h1 {
 }
 
 .lockIcon {
-    background: url(icons/lock.svg);
+  background: url(icons/lock.svg);
 }
 
 .filesIcon {
@@ -111,71 +117,71 @@ h1 {
 }
 
 .crossIcon {
-    background: url(icons/cross.svg);
+  background: url(icons/cross.svg);
 }
 
 .spinnerIcon {
   background: url(icons/spinner.svg);
 }
 
-.openButton {
+.openIcon {
   background: url(icons/folder-open.svg);
 }
 
-.openButton:hover {
+.openIcon:hover {
   background: url(icons/highlight/folder-open.svg);
 }
 
-.openButton:focus {
+.openIcon:focus {
   background: url(icons/selected/folder-open.svg);
 }
 
-.deleteButton {
+.deleteIcon {
   background: url(icons/delete.svg);
 }
 
-.deleteButton:hover {
+.deleteIcon:hover {
   background: url(icons/highlight/delete.svg);
 }
 
-.deleteButton:focus {
+.deleteIcon:focus {
   background: url(icons/selected/delete.svg);
 }
 
-.rightButton {
+.rightIcon {
   background: url(icons/right.svg);
 }
 
-.rightButton:hover {
+.rightIcon:hover {
   background: url(icons/highlight/right.svg);
 }
 
-.rightButton:focus {
+.rightIcon:focus {
   background: url(icons/selected/right.svg);
 }
 
-.leftButton {
+.leftIcon {
   background: url(icons/left.svg);
 }
 
-.leftButton:hover {
+.leftIcon:hover {
   background: url(icons/highlight/left.svg);
 }
 
-.leftButton:focus {
+.leftIcon:focus {
   background: url(icons/selected/left.svg);
 }
 
-.checkedButton {
+.checkedIcon {
   background: url(icons/checked.svg);
 }
-.checkedButton:hover {
+.checkedIcon:hover {
   background: url(icons/highlight/checked.svg);
 }
 
-.uncheckedButton {
+.uncheckedIcon {
   background: url(icons/unchecked.svg);
 }
-.uncheckedButton:hover {
+.uncheckedIcon:hover {
   background: url(icons/highlight/unchecked.svg);
 }
