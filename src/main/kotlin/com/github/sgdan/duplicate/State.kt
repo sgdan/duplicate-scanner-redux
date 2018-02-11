@@ -46,7 +46,23 @@ data class State(
          */
         val tasks: List<() -> Unit> = list()
 ) {
-    val largestPaths: Stream<String> = sizeToPath.toStream().map { it._2 }
+    val groups: Stream<Set<File>> = sizeToHash.toStream().flatMap { it._2 }
+            .map { hashToFile.get(it) }.flatMap { it }
+            .filter { it.size() > 1 }
+            .take(MAX_GROUPS) // limit the number of groups
+
+    /**
+     * Don't bother hashing anything smaller than this size, it will be ignored
+     * because we're cutting off the number of groups displayed.
+     */
+    val minSize: Long = when {
+        groups.size() < MAX_GROUPS -> 0
+        else -> groups.last().first().size
+    }
+
+    val largestPaths: Stream<String> = sizeToPath.toStream()
+            .filter { it._1 >= minSize } // ignore files smaller than our cutoff
+            .map { it._2 }
             .filter { it.size() > 1 }
             .flatMap { it }
 
@@ -54,11 +70,7 @@ data class State(
         !hashing.contains(it) && !pathToFile.containsKey(it)
     }
 
-    val groups: Stream<Set<File>> = sizeToHash.toStream().flatMap { it._2 }
-            .map { hashToFile.get(it) }.flatMap { it }
-            .filter { it.size() > 1 }
+    val currentGroup: Set<File> = hashToFile.getOrElse(currentHash, hashSet())
 
-    val group: Set<File> = hashToFile.getOrElse(currentHash, hashSet())
-
-    val remaining: Int = group.removeAll(deleted).size()
+    val remaining: Int = currentGroup.removeAll(deleted).size()
 }

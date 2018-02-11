@@ -2,6 +2,7 @@ package com.github.sgdan.duplicate
 
 import com.github.sgdan.duplicate.ActionType.*
 import com.github.sgdan.webviewredux.createDoc
+import io.vavr.kotlin.list
 import kotlinx.html.*
 import kotlinx.html.dom.create
 import mu.KotlinLogging
@@ -29,7 +30,7 @@ fun State.group(): Node = doc.create.html {
                 iconButton("left", CLEAR_GROUP.name)
                 div { +"Back" }
                 div("grow center") {
-                    +"Identical files of size ${sizeToString(group.first().size)}"
+                    +"Identical files of size ${sizeToString(currentGroup.first().size)}"
                 }
                 div { +"Safe Mode" }
                 val safeIcon = if (safeMode) "checked" else "unchecked"
@@ -37,8 +38,8 @@ fun State.group(): Node = doc.create.html {
             }
 
             // files that have been hashed
-            val n = group.size()
-            group.forEachIndexed { i, file ->
+            val n = currentGroup.size()
+            currentGroup.forEachIndexed { i, file ->
                 fileRow(this@group, file, position(i, n), remaining < 2)
             }
         }
@@ -109,12 +110,19 @@ fun State.folders() = doc.create.html {
                 }
             }
             br
-            val mem = getRuntime().run { totalMemory() - freeMemory() }.div(1048576)
-            div("path") { +"${paths.size()} files, ${pathToFile.size()} scanned. ${hashToFile.keySet().size()} groups. Using ${mem}M memory." }
+            val mem: Double = getRuntime().run { totalMemory() - freeMemory() } / 1073741824.0
+            div("path") {
+                +list("${paths.size()} files",
+                        "${pathToFile.size()} scanned",
+                        "${groups.size()} groups",
+                        "${sizeToString(minSize)} minimum",
+                        "%.1fG ram".format(mem)
+                ).joinToString(", ")
+            }
 
             // show groups of identical files
             div("rowHolder") {
-                groups.take(100).forEach { files ->
+                groups.forEach { files ->
                     val first = files.first()!!
                     val n = files.size()
                     val remaining = files.removeAll(deleted).size()

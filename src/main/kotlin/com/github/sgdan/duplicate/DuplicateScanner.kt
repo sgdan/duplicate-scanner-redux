@@ -15,8 +15,12 @@ import tornadofx.chooseDirectory
 import java.awt.Toolkit.getDefaultToolkit
 import java.io.File
 import java.lang.System.getProperty
+import java.lang.System.setProperty
+import com.apple.eawt.Application as MacApp
 
 private val log = KotlinLogging.logger {}
+
+const val MAX_GROUPS = 25
 
 var redux: Redux<State>? = null
 var webview: WebView? = null
@@ -56,11 +60,15 @@ class DuplicateScanner : Application() {
 }
 
 fun main(vararg args: String) {
-    // set dock icon for Mac
+
+    // Mac specific settings
     val os = getProperty("os.name").toLowerCase()
     if (os.startsWith("mac os x")) {
+        // main menu, equivalent of -Xdock:name="Duplicate Scanner"
+        setProperty("apple.awt.application.name", "Duplicate Scanner")
+
         val icon = getDefaultToolkit().getImage(urlTo("files-empty.png"))
-        com.apple.eawt.Application.getApplication().dockIconImage = icon
+        MacApp.getApplication().dockIconImage = icon
     }
 
     // launch JavaFX app
