@@ -1,6 +1,8 @@
 package com.github.sgdan.duplicate
 
+import com.github.sgdan.duplicate.ActionType.ADD_HASH
 import mu.KotlinLogging
+import java.io.File
 import java.io.FileInputStream
 import java.math.BigInteger
 import java.security.DigestInputStream
@@ -21,3 +23,7 @@ fun hash(path: String): String {
     return BigInteger(1, md.digest()).toString(16)
 }
 
+fun hashFile(path: String) {
+    val file = File(path)
+    redux?.perform(ADD_HASH, path, file.length(), hash(path), file.parentFile?.path)
+}

@@ -3,9 +3,11 @@ package com.github.sgdan.duplicate
 import com.github.sgdan.duplicate.ActionType.*
 import com.github.sgdan.webviewredux.Action
 import com.github.sgdan.webviewredux.toHtml
-import io.vavr.collection.Set
+import io.vavr.collection.Stream
+import io.vavr.control.Option
 import io.vavr.kotlin.hashSet
-import kotlinx.coroutines.experimental.async
+import io.vavr.kotlin.list
+import io.vavr.kotlin.option
 import kotlinx.coroutines.experimental.launch
 import mu.KotlinLogging
 import java.io.File
@@ -16,7 +18,8 @@ enum class ActionType {
     OPEN,
     CLEAR,
     FOLDER_CHOSEN,
-    SELECT_SIZE,
+    SELECT_GROUP,
+    CLEAR_GROUP,
     ADD_FILE,
     DEBUG,
     TOGGLE_SAFE,
@@ -24,12 +27,26 @@ enum class ActionType {
     DELETE
 }
 
-fun update(action: Action, state: State) = when (action.to<ActionType>()) {
-    CLEAR -> clear(state)
+fun update(action: Action, state: State): State =
+        act(action, state).queueHash().execute()
+
+/**
+ * Queue up files to be hashed
+ */
+fun State.queueHash(): State {
+    val toHashNow = toHash.take(Runtime.getRuntime().availableProcessors() - 1 - hashing.size())
+    val hashTasks: Stream<() -> Unit> = toHashNow.map { path -> { hashFile(path) } }
+    return copy(hashing = hashing.addAll(toHashNow),
+            tasks = tasks.appendAll(hashTasks))
+}
+
+fun act(action: Action, state: State): State = when (action.to<ActionType>()) {
+    CLEAR -> action.call(state, State::clear)
     OPEN -> open(state)
     FOLDER_CHOSEN -> action.call(state, State::addFolder)
-    SELECT_SIZE -> action.call(state, State::selectSize)
-    ADD_FILE -> action.call(state, State::addFile)
+    SELECT_GROUP -> action.call(state, State::selectGroup)
+    CLEAR_GROUP -> state.selectGroup(null)
+    ADD_FILE -> action.call(state, State::addPath)
     ADD_HASH -> action.call(state, State::addHash)
     TOGGLE_SAFE -> state.copy(safeMode = !state.safeMode)
     DELETE -> action.call(state, State::delete)
@@ -40,8 +57,11 @@ fun update(action: Action, state: State) = when (action.to<ActionType>()) {
     else -> throw Exception("Unexpected action: $action")
 }
 
-/** Preserve only the current folder when clearing */
-fun clear(state: State) = State(currentFolder = state.currentFolder)
+/** Clear everything except the current folder */
+fun State.clear(): State {
+    job.cancel()
+    return State(currentFolder = currentFolder)
+}
 
 fun open(state: State): State {
     chooseFolder(state)
@@ -49,54 +69,36 @@ fun open(state: State): State {
 }
 
 fun State.delete(path: String): State {
+    val file = pathToFile.apply(path)
     File(path).delete()
-    return copy(deleted = deleted.add(path))
+    return copy(deleted = deleted.add(file))
+}
+
+fun State.selectGroup(md5: String? = null): State = copy(currentHash = md5)
+
+fun State.addPath(path: String, size: Long): State {
+    if (paths.contains(path)) return this
+
+    // must be a new path
+    val sameSize = sizeToPath.getOrElse(size, hashSet()).add(path)
+    return copy(paths = paths.add(path),
+            sizeToPath = sizeToPath.put(size, sameSize))
+}
+
+fun State.addHash(path: String, size: Long, md5: String, folder: String?): State {
+    if (pathToFile.containsKey(path)) throw Exception("$path has already been hashed")
+    val file = File(path, size, md5, folder)
+    val hashes = sizeToHash.getOrElse(size, hashSet()).add(md5)
+    val files = hashToFile.getOrElse(md5, hashSet()).add(file)
+    return copy(pathToFile = pathToFile.put(path, file),
+            sizeToHash = sizeToHash.put(size, hashes),
+            hashToFile = hashToFile.put(md5, files),
+            hashing = hashing.remove(path))
 }
 
 /**
- * When the user selects a group of files that are the same size, we need to
- * kick off a task to calculate md5 hash values which are used to determine
- * if the file contents are identical.
- */
-fun State.selectSize(size: String): State {
-    // selection might be null, in that case just clear the selection
-    val selected = size.toLongOrNull() ?: return copy(selectedSize = null)
-
-    // figure out which files need to be hashed
-    val paths: Set<String> = sizeToPaths.getOrElse(selected, hashSet())
-    val toHash: Set<String> = paths.removeAll(hashing).removeAll(hashed)
-    launch {
-        toHash.forEach { path ->
-            val calculated = hash(path)
-            redux?.perform(ADD_HASH, path, calculated)
-        }
-    }
-
-    return copy(selectedSize = selected,
-            hashing = hashing.addAll(toHash))
-}
-
-fun State.addFile(path: String, length: Long): State {
-    val paths = sizeToPaths.getOrElse(length, hashSet()).add(path)
-    return copy(sizeToPaths = sizeToPaths.put(length, paths),
-            pathToSize = pathToSize.put(path, length)
-    )
-}
-
-fun State.addHash(path: String, hash: String): State {
-    val paths = hashToPaths.getOrElse(hash, hashSet()).add(path)
-    val size = pathToSize.apply(path)
-    val hashes = sizeToHashes.getOrElse(size, hashSet()).add(hash)
-    return copy(hashToPaths = hashToPaths.put(hash, paths),
-            hashing = hashing.remove(path),
-            hashed = hashed.add(path),
-            sizeToHashes = sizeToHashes.put(size, hashes))
-}
-
-/**
- * Add a folder to be scanned. Subfolders are scanned anyway so any
- * subfolders will be removed from the state. Kick off the background
- * scanning for the new folder
+ * Add a folder to be scanned. Subfolders are scanned anyway so remove them.
+ * Kick off the background scanning for the new folder
  */
 fun State.addFolder(path: String): State {
     val paths = folders.add(path)
@@ -106,17 +108,26 @@ fun State.addFolder(path: String): State {
 
     // If noSubs doesn't contain this folder, no need to scan
     // because a parent must have already been scanned
-    if (noSubs.contains(path)) async { scan(path) }
-
-    return copy(folders = noSubs, currentFolder = path)
+    val task: Option<() -> Unit> = noSubs.contains(path).option({ { scan(path) } })
+    return copy(folders = noSubs,
+            currentFolder = path,
+            tasks = tasks.appendAll(task))
 }
 
 /**
- * Scan a folder and add all files by length to the state
+ * Scan a folder and addPath all files by length to the state
  */
 fun scan(folder: String) {
     val dir = File(folder)
     dir.walk().filter { it.isFile && it.length() > 0 }.forEach {
         redux?.perform(ADD_FILE, it.canonicalPath, it.length())
     }
+}
+
+/**
+ * Queue the actions to be executed in the background
+ */
+fun State.execute(): State {
+    launch(parent = job) { tasks.forEach { it() } }
+    return copy(tasks = list())
 }

@@ -49,7 +49,7 @@ class DuplicateScanner : Application() {
         redux = Redux(
                 webview!!,
                 State(),
-                ::view,
+                State::view,
                 ::update
         )
     }

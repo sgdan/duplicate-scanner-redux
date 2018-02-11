@@ -2,13 +2,12 @@ package com.github.sgdan.duplicate
 
 import com.github.sgdan.duplicate.ActionType.*
 import com.github.sgdan.webviewredux.createDoc
-import io.vavr.kotlin.list
 import kotlinx.html.*
 import kotlinx.html.dom.create
 import mu.KotlinLogging
 import org.w3c.dom.Node
-import java.io.File
 import java.lang.Runtime.getRuntime
+import java.io.File as IOFile
 
 private val log = KotlinLogging.logger {}
 
@@ -17,38 +16,30 @@ private val doc = createDoc()
 private fun linkTo(resource: String) = DuplicateScanner::class.java.classLoader.getResource(resource)
         .toURI().toURL().toExternalForm()
 
-fun view(state: State): Node = when {
-    state.selectedSize == null -> folders(state)
-    else -> bySize(state)
+fun State.view(): Node = when (currentHash) {
+    null -> folders()
+    else -> group()
 }
 
-fun bySize(state: State) = doc.create.html {
+fun State.group(): Node = doc.create.html {
     header()
     body {
         div("rowHolder") {
             div("row") {
-                iconButton("left", SELECT_SIZE.name, "-") // select null size to go back
+                iconButton("left", CLEAR_GROUP.name)
                 div { +"Back" }
                 div("grow center") {
-                    +"Files of size ${sizeToString(state.selectedSize!!.toLong())}"
+                    +"Identical files of size ${sizeToString(group.first().size)}"
                 }
                 div { +"Safe Mode" }
-                val safeIcon = if (state.safeMode) "checked" else "unchecked"
+                val safeIcon = if (safeMode) "checked" else "unchecked"
                 iconButton(safeIcon, TOGGLE_SAFE.name)
             }
 
             // files that have been hashed
-            state.selectedHashes().map { state.hashToPaths.apply(it) }.forEach { paths ->
-                val n = paths.size()
-                val remaining = paths.removeAll(state.deleted).size()
-                paths.forEachIndexed { i, path ->
-                    fileRow(state, path, position(i, n), remaining < 2)
-                }
-            }
-
-            // also display files still being hashed
-            state.hashing.filter { state.pathToSize.apply(it) == state.selectedSize }.forEach { path ->
-                fileRow(state, path, "only", true)
+            val n = group.size()
+            group.forEachIndexed { i, file ->
+                fileRow(this@group, file, position(i, n), remaining < 2)
             }
         }
     }
@@ -61,25 +52,25 @@ fun position(i: Int, n: Int) = when {
     else -> "middle"
 }
 
-fun DIV.fileRow(state: State, path: String, style: String, lock: Boolean) {
+fun DIV.fileRow(state: State, file: File, style: String, lock: Boolean) {
     div("row $style") {
         icon("file")
         div("grow pad") {
-            val f = File(path)
+            val f = IOFile(file.path)
             div("trunc") { +f.name }
-            div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
+            div("path trunc") { +(f.parentFile?.canonicalPath ?: "-") }
         }
         icon("open")
         when {
-            state.hashing.contains(path) -> icon("spinner")
-            state.deleted.contains(path) -> icon("cross")
+            state.hashing.contains(file.path) -> icon("spinner")
+            state.deleted.contains(file) -> icon("cross")
             state.safeMode && lock -> icon("lock")
-            else -> iconButton("delete", DELETE.name, path)
+            else -> iconButton("delete", DELETE.name, file.path)
         }
     }
 }
 
-fun folders(state: State) = doc.create.html {
+fun State.folders() = doc.create.html {
     header()
     body {
         div("row") {
@@ -100,17 +91,17 @@ fun folders(state: State) = doc.create.html {
         br
 
         // show the folders that have been scanned
-        if (state.folders.isEmpty()) {
+        if (folders.isEmpty) {
             div("row pad") {
                 +"No folders selected, please click 'Open'!"
             }
         } else {
             div {
-                state.folders.forEach { folder ->
+                folders.forEach { folder ->
                     div("row") {
                         icon("folder")
                         div("grow pad") {
-                            val f = File(folder)
+                            val f = IOFile(folder)
                             div("trunc") { +f.name }
                             div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
                         }
@@ -119,25 +110,24 @@ fun folders(state: State) = doc.create.html {
             }
             br
             val mem = getRuntime().run { totalMemory() - freeMemory() }.div(1048576)
-            div("path") { +"Checked ${state.pathToSize.size()} files. Using ${mem}M memory." }
+            div("path") { +"${paths.size()} files, ${pathToFile.size()} scanned. ${hashToFile.keySet().size()} groups. Using ${mem}M memory." }
 
-            // show groups of 2 or more files of the same size
+            // show groups of identical files
             div("rowHolder") {
-                state.sizeToPaths.toStream().filter { it._2.size() > 1 }.take(100).forEach {
-                    val paths = it._2
-                    val size = it._1
-                    val n = paths.size()
-                    val remaining = paths.removeAll(state.deleted).size()
+                groups.take(100).forEach { files ->
+                    val first = files.first()!!
+                    val n = files.size()
+                    val remaining = files.removeAll(deleted).size()
                     div("row") {
                         icon("files")
                         div("grow pad") {
-                            div { +sizeToString(size) }
+                            div { +sizeToString(first.size) }
                             div("path") {
                                 +"$n files"
                                 if (remaining < n) +", $remaining remaining"
                             }
                         }
-                        iconButton("right", SELECT_SIZE.name, size.toString())
+                        iconButton("right", SELECT_GROUP.name, first.md5)
                     }
                 }
             }
@@ -177,4 +167,6 @@ fun HTML.header() {
     }
 }
 
-fun escape(value: String) = value.replace("'", "\\'").replace("\"", "\\\"").replace("\\", "\\\\")
+fun escape(value: String) = value.replace("'", "\\'")
+        .replace("\"", "\\\"")
+        .replace("\\", "\\\\")

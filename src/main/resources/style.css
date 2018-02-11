@@ -57,10 +57,11 @@ h1 {
   white-space: nowrap;
 }
 
+/*
+ Anything truncated should be shown on mouseover so that user can see details
+ */
 .trunc:hover {
-  overflow: visible;
   white-space: normal;
-  height: auto;
 }
 
 .center {
