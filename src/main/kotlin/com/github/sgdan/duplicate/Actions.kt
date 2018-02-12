@@ -18,8 +18,9 @@ enum class ActionType {
     OPEN,
     CLEAR,
     FOLDER_CHOSEN,
-    SELECT_GROUP,
-    CLEAR_GROUP,
+    SELECT_DIR,
+    SELECT_MD5,
+    CLEAR_SELECT,
     ADD_FILE,
     DEBUG,
     TOGGLE_SAFE,
@@ -44,8 +45,9 @@ fun act(action: Action, state: State): State = when (action.to<ActionType>()) {
     CLEAR -> action.call(state, State::clear)
     OPEN -> open(state)
     FOLDER_CHOSEN -> action.call(state, State::addFolder)
-    SELECT_GROUP -> action.call(state, State::selectGroup)
-    CLEAR_GROUP -> state.selectGroup(null)
+    SELECT_DIR -> state.select(null, action.get(0, String::class))
+    SELECT_MD5 -> state.select(action.get(0, String::class), null)
+    CLEAR_SELECT -> state.select(null, null)
     ADD_FILE -> action.call(state, State::addPath)
     ADD_HASH -> action.call(state, State::addHash)
     TOGGLE_SAFE -> state.copy(safeMode = !state.safeMode)
@@ -60,7 +62,7 @@ fun act(action: Action, state: State): State = when (action.to<ActionType>()) {
 /** Clear everything except the current folder */
 fun State.clear(): State {
     job.cancel()
-    return State(currentFolder = currentFolder)
+    return State(dir = dir)
 }
 
 fun open(state: State): State {
@@ -74,7 +76,9 @@ fun State.delete(path: String): State {
     return copy(deleted = deleted.add(file))
 }
 
-fun State.selectGroup(md5: String? = null): State = copy(currentHash = md5)
+fun State.select(md5: String? = null, dir: String? = null): State = copy(
+        currentFolder = dir,
+        currentHash = md5)
 
 fun State.addPath(path: String, size: Long): State {
     if (paths.contains(path)) return this
@@ -85,15 +89,17 @@ fun State.addPath(path: String, size: Long): State {
             sizeToPath = sizeToPath.put(size, sameSize))
 }
 
-fun State.addHash(path: String, size: Long, md5: String, folder: String?): State {
+fun State.addHash(path: String, size: Long, md5: String, folder: String): State {
     if (pathToFile.containsKey(path)) throw Exception("$path has already been hashed")
     val file = File(path, size, md5, folder)
     val hashes = sizeToHash.getOrElse(size, hashSet()).add(md5)
     val files = hashToFile.getOrElse(md5, hashSet()).add(file)
+    val siblings = dirToFile.getOrElse(folder, hashSet()).add(file)
     return copy(pathToFile = pathToFile.put(path, file),
             sizeToHash = sizeToHash.put(size, hashes),
             hashToFile = hashToFile.put(md5, files),
-            hashing = hashing.remove(path))
+            hashing = hashing.remove(path),
+            dirToFile = dirToFile.put(folder, siblings))
 }
 
 /**
@@ -110,7 +116,7 @@ fun State.addFolder(path: String): State {
     // because a parent must have already been scanned
     val task: Option<() -> Unit> = noSubs.contains(path).option({ { scan(path) } })
     return copy(folders = noSubs,
-            currentFolder = path,
+            dir = path,
             tasks = tasks.appendAll(task))
 }
 

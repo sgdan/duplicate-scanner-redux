@@ -34,7 +34,7 @@ private fun linkTo(resource: String) = urlTo(resource).toExternalForm()
 fun chooseFolder(state: State) = runBlocking {
     launch(JavaFx) {
         val chosen = chooseDirectory(
-                initialDirectory = File(state.currentFolder),
+                initialDirectory = File(state.dir),
                 owner = primaryStage
         )
         if (chosen != null) redux?.perform(FOLDER_CHOSEN, chosen.absolutePath)
@@ -60,7 +60,6 @@ class DuplicateScanner : Application() {
 }
 
 fun main(vararg args: String) {
-
     // Mac specific settings
     val os = getProperty("os.name").toLowerCase()
     if (os.startsWith("mac os x")) {

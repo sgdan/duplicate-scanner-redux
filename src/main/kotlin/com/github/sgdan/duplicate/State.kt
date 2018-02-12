@@ -20,8 +20,14 @@ data class File(
         val folder: String?)
 
 data class State(
-        val currentFolder: String = ".",
+        val dir: String = ".", // last selected folder to scan
+
+        // md5 of selected group to show on group page
         val currentHash: String? = null,
+
+        // selected parent folder to show on parent page
+        val currentFolder: String? = null,
+
         val safeMode: Boolean = true,
         val folders: Set<String> = hashSet(),
         val paths: Set<String> = hashSet(),
@@ -36,6 +42,7 @@ data class State(
         val hashToFile: Map<String, Set<File>> = hashMap(),
         val pathToFile: Map<String, File> = hashMap(),
         val deleted: Set<File> = hashSet(),
+        val dirToFile: Map<String, Set<File>> = hashMap(),
 
         // job to manage background tasks
         val job: Job = Job(),
@@ -73,4 +80,8 @@ data class State(
     val currentGroup: Set<File> = hashToFile.getOrElse(currentHash, hashSet())
 
     val remaining: Int = currentGroup.removeAll(deleted).size()
+
+    fun inDir(): Stream<File> = dirToFile.getOrElse(currentFolder, hashSet())
+            .toStream()
+            .sortBy { it.size }
 }

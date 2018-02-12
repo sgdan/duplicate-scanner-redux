@@ -2,6 +2,7 @@ package com.github.sgdan.duplicate
 
 import com.github.sgdan.duplicate.ActionType.*
 import com.github.sgdan.webviewredux.createDoc
+import io.vavr.kotlin.hashSet
 import io.vavr.kotlin.list
 import kotlinx.html.*
 import kotlinx.html.dom.create
@@ -17,9 +18,60 @@ private val doc = createDoc()
 private fun linkTo(resource: String) = DuplicateScanner::class.java.classLoader.getResource(resource)
         .toURI().toURL().toExternalForm()
 
-fun State.view(): Node = when (currentHash) {
-    null -> folders()
-    else -> group()
+fun State.view(): Node = when {
+    currentHash != null -> group()
+    currentFolder != null -> dir()
+    else -> folders()
+}
+
+fun State.dir(): Node = doc.create.html {
+    header()
+    body {
+        div("rowHolder") {
+            val files = inDir()
+            div("row") {
+                iconButton("left", CLEAR_SELECT.name)
+                div { +"Back" }
+                div("grow center") {
+                    val f = IOFile(files.first().folder)
+                    div("trunc") { +f.name }
+                    div("path trunc") { +(f.parentFile?.canonicalPath ?: "-") }
+                }
+                div { +"Safe Mode" }
+                val safeIcon = if (safeMode) "checked" else "unchecked"
+                iconButton(safeIcon, TOGGLE_SAFE.name)
+            }
+
+            // files that have been hashed
+            val n = files.size()
+            files.forEachIndexed { i, file ->
+                detailRow(this@dir, file, position(i, n))
+            }
+        }
+    }
+}
+
+fun DIV.detailRow(state: State, file: File) {
+    div("row") {
+        icon("file")
+        val group = state.hashToFile.getOrElse(file.md5, hashSet())
+        val remaining = group.removeAll(state.deleted).size()
+        div("grow pad") {
+            val f = IOFile(file.path)
+            div("trunc") { +f.name }
+            div("path trunc") {
+                +sizeToString(file.size)
+                +", $remaining/${group.size()} remaining"
+            }
+        }
+        iconButton("files", SELECT_MD5.name, file.md5)
+        when {
+            state.hashing.contains(file.path) -> icon("spinner")
+            state.deleted.contains(file) -> icon("cross")
+            state.safeMode && remaining < 2 -> icon("lock")
+            else -> iconButton("delete", DELETE.name, file.path)
+        }
+    }
 }
 
 fun State.group(): Node = doc.create.html {
@@ -27,7 +79,7 @@ fun State.group(): Node = doc.create.html {
     body {
         div("rowHolder") {
             div("row") {
-                iconButton("left", CLEAR_GROUP.name)
+                iconButton("left", CLEAR.name)
                 div { +"Back" }
                 div("grow center") {
                     +"Identical files of size ${sizeToString(currentGroup.first().size)}"
@@ -61,7 +113,7 @@ fun DIV.fileRow(state: State, file: File, style: String, lock: Boolean) {
             div("trunc") { +f.name }
             div("path trunc") { +(f.parentFile?.canonicalPath ?: "-") }
         }
-        icon("open")
+        iconButton("open", SELECT_DIR.name, file.folder ?: "")
         when {
             state.hashing.contains(file.path) -> icon("spinner")
             state.deleted.contains(file) -> icon("cross")
@@ -135,7 +187,7 @@ fun State.folders() = doc.create.html {
                                 if (remaining < n) +", $remaining remaining"
                             }
                         }
-                        iconButton("right", SELECT_GROUP.name, first.md5)
+                        iconButton("right", SELECT_MD5.name, first.md5)
                     }
                 }
             }

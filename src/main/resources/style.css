@@ -109,6 +109,14 @@ h1 {
   background: url(icons/files-empty.svg);
 }
 
+.filesIcon:hover {
+  background: url(icons/highlight/files-empty.svg);
+}
+
+.filesIcon:focus {
+  background: url(icons/selected/files-empty.svg);
+}
+
 .fileIcon {
   background: url(icons/file.svg);
 }

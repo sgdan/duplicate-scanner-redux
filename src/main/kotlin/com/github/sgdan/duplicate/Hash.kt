@@ -25,5 +25,5 @@ fun hash(path: String): String {
 
 fun hashFile(path: String) {
     val file = File(path)
-    redux?.perform(ADD_HASH, path, file.length(), hash(path), file.parentFile?.path)
+    redux?.perform(ADD_HASH, path, file.length(), hash(path), file.parentFile?.path ?: "")
 }

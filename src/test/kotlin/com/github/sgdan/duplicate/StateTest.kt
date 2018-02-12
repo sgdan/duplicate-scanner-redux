@@ -49,8 +49,8 @@ class StateTest : Assert() {
                 .addHash("/another/two", 222, "22222", "/another")
         assertEquals(list("/another/three", "/two"), added.toHash.toList())
 
-        val all = added.addHash("/two", 222, "22222", null)
-                .addHash("/another/three", 111, "111", null)
+        val all = added.addHash("/two", 222, "22222", "")
+                .addHash("/another/three", 111, "111", "")
         assertTrue(all.toHash.isEmpty)
     }
 
@@ -67,7 +67,7 @@ class StateTest : Assert() {
         assertTrue(job.isActive)
         val clear = initial.clear()
         assertEquals(0, clear.paths.size())
-        assertEquals(".", clear.currentFolder)
+        assertEquals(".", clear.dir)
         assertTrue(job.isCancelled)
     }
 
