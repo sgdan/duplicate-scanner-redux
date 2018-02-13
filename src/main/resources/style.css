@@ -101,6 +101,21 @@ h1 {
   border-right: 1px solid red;
 }
 
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    display: none;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    display: block;
+}
+
 .lockIcon {
   background: url(icons/lock.svg);
 }

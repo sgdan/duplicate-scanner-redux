@@ -107,10 +107,10 @@ fun State.addHash(path: String, size: Long, md5: String, folder: String): State 
  * Kick off the background scanning for the new folder
  */
 fun State.addFolder(path: String): State {
-    val paths = folders.add(path)
+    val paths = folders.insert(0, path)
     val noSubs = paths.filter { p ->
         !(paths - p).any { p.startsWith(it) }
-    }.toSet()
+    }
 
     // If noSubs doesn't contain this folder, no need to scan
     // because a parent must have already been scanned

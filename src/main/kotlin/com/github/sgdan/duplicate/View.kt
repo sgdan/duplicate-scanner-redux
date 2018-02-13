@@ -43,9 +43,8 @@ fun State.dir(): Node = doc.create.html {
             }
 
             // files that have been hashed
-            val n = files.size()
-            files.forEachIndexed { i, file ->
-                detailRow(this@dir, file, position(i, n))
+            files.forEach { file ->
+                detailRow(this@dir, file)
             }
         }
     }
@@ -149,16 +148,11 @@ fun State.folders() = doc.create.html {
                 +"No folders selected, please click 'Open'!"
             }
         } else {
-            div {
-                folders.forEach { folder ->
-                    div("row") {
-                        icon("folder")
-                        div("grow pad") {
-                            val f = IOFile(folder)
-                            div("trunc") { +f.name }
-                            div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
-                        }
-                    }
+            div("tooltip") {
+                val first = folders.first()
+                folderRow(first)
+                span("tooltiptext") {
+                    folders.remove(first).forEach { div { folderRow(it) } }
                 }
             }
             br
@@ -200,6 +194,17 @@ fun sizeToString(size: Long) = when {
     size > 1000000 -> "%.1f MB".format(size / 1000000.0)
     size > 1000 -> "%.1f KB".format(size / 1000.0)
     else -> "%d B".format(size)
+}
+
+fun DIV.folderRow(dir: String) {
+    div("row") {
+        icon("folder")
+        div("grow pad") {
+            val f = IOFile(dir)
+            div("trunc") { +f.name }
+            div("path trunc") { +(f.parentFile?.absolutePath ?: "-") }
+        }
+    }
 }
 
 fun DIV.icon(name: String) {

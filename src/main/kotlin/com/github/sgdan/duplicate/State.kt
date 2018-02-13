@@ -29,7 +29,7 @@ data class State(
         val currentFolder: String? = null,
 
         val safeMode: Boolean = true,
-        val folders: Set<String> = hashSet(),
+        val folders: List<String> = list(),
         val paths: Set<String> = hashSet(),
 
         // sets of same size files, largest first
