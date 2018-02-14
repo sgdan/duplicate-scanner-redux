@@ -2,6 +2,7 @@ package com.github.sgdan.duplicate
 
 import com.github.sgdan.duplicate.ActionType.*
 import com.github.sgdan.webviewredux.createDoc
+import io.vavr.collection.Set
 import io.vavr.kotlin.hashSet
 import io.vavr.kotlin.list
 import kotlinx.html.*
@@ -19,7 +20,6 @@ private fun linkTo(resource: String) = DuplicateScanner::class.java.classLoader.
         .toURI().toURL().toExternalForm()
 
 fun State.view(): Node = when {
-    currentHash != null -> group()
     currentFolder != null -> dir()
     else -> folders()
 }
@@ -69,30 +69,6 @@ fun DIV.detailRow(state: State, file: File) {
             state.deleted.contains(file) -> icon("cross")
             state.safeMode && remaining < 2 -> icon("lock")
             else -> iconButton("delete", DELETE.name, file.path)
-        }
-    }
-}
-
-fun State.group(): Node = doc.create.html {
-    header()
-    body {
-        div("rowHolder") {
-            div("row") {
-                iconButton("left", CLEAR.name)
-                div { +"Back" }
-                div("grow center") {
-                    +"Identical files of size ${sizeToString(currentGroup.first().size)}"
-                }
-                div { +"Safe Mode" }
-                val safeIcon = if (safeMode) "checked" else "unchecked"
-                iconButton(safeIcon, TOGGLE_SAFE.name)
-            }
-
-            // files that have been hashed
-            val n = currentGroup.size()
-            currentGroup.forEachIndexed { i, file ->
-                fileRow(this@group, file, position(i, n), remaining < 2)
-            }
         }
     }
 }
@@ -166,26 +142,21 @@ fun State.folders() = doc.create.html {
                 ).joinToString(", ")
             }
 
-            // show groups of identical files
             div("rowHolder") {
-                groups.forEach { files ->
-                    val first = files.first()!!
-                    val n = files.size()
-                    val remaining = files.removeAll(deleted).size()
-                    div("row") {
-                        icon("files")
-                        div("grow pad") {
-                            div { +sizeToString(first.size) }
-                            div("path") {
-                                +"$n files"
-                                if (remaining < n) +", $remaining remaining"
-                            }
-                        }
-                        iconButton("right", SELECT_MD5.name, first.md5)
-                    }
-                }
+                // selected group first...
+                if (currentGroup.nonEmpty()) group(this@folders, currentGroup)
+                // ...then the rest
+                groups.forEach { group(this@folders, it) }
             }
         }
+    }
+}
+
+fun DIV.group(state: State, group: Set<File>) {
+    val n = group.size()
+    val remaining = group - state.deleted
+    group.forEachIndexed { i, file ->
+        fileRow(state, file, position(i, n), remaining.size < 2)
     }
 }
 

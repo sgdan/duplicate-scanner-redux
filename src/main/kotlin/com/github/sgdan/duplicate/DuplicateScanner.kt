@@ -20,7 +20,7 @@ import com.apple.eawt.Application as MacApp
 
 private val log = KotlinLogging.logger {}
 
-const val MAX_GROUPS = 25
+const val MAX_GROUPS = 50
 
 var redux: Redux<State>? = null
 var webview: WebView? = null
